@@ -1,42 +1,42 @@
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { useAuth } from "../context/AuthContext";
+import { useAuth } from "../../context/AuthContext";
 import { useTranslation } from "react-i18next";
+import EDSLoginButton from "../../components/EDSLoginButton";
 
-const Register = () => {
-  const [name, setName] = useState("");
+const Login = () => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [confirmPassword, setConfirmPassword] = useState("");
   const [error, setError] = useState("");
   const [isLoading, setIsLoading] = useState(false);
-  const { register } = useAuth();
+  const { login } = useAuth();
   const navigate = useNavigate();
   const { t } = useTranslation();
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError("");
-
-    // Validate passwords match
-    if (password !== confirmPassword) {
-      setError(t("passwordsDoNotMatch"));
-      return;
-    }
-
     setIsLoading(true);
 
     try {
-      await register(name, email, password);
-      // Redirect to login after successful registration
-      navigate("/login", {
-        state: { message: t("registrationSuccessful") },
-      });
+      await login(email, password);
+      navigate("/dashboard");
     } catch (err) {
-      setError(err.response?.data?.message || t("registrationError"));
+      setError(err.response?.data?.message || t("loginError"));
     } finally {
       setIsLoading(false);
     }
+  };
+
+  const handleEDSLoginSuccess = (user) => {
+    console.log("user", user);
+    localStorage.setItem("user", JSON.stringify(user));
+    navigate("/dashboard");
+  };
+
+  const handleNewUser = (user) => {
+    localStorage.setItem("user", JSON.stringify(user));
+    navigate("/profile-completion");
   };
 
   return (
@@ -48,17 +48,8 @@ const Register = () => {
         {t("backToHome")}
       </Link>
       <h2 className="mt-6 text-center text-3xl font-extrabold text-gray-900">
-        {t("createAccountTitle")}
+        {t("signInTitle")}
       </h2>
-      <p className="mt-2 text-center text-sm text-gray-600">
-        {t("or")}{" "}
-        <Link
-          to="/login"
-          className="font-medium text-sky-600 hover:text-sky-500"
-        >
-          {t("signInToExisting")}
-        </Link>
-      </p>
 
       {error && (
         <div className="mt-4 bg-red-50 border-l-4 border-red-400 p-4">
@@ -72,17 +63,6 @@ const Register = () => {
 
       <form className="mt-8 space-y-6" onSubmit={handleSubmit}>
         <div className="space-y-4">
-          <input
-            id="name"
-            name="name"
-            type="text"
-            autoComplete="name"
-            required
-            value={name}
-            onChange={(e) => setName(e.target.value)}
-            className="block w-full px-4 py-3 border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-sky-500 focus:border-sky-500 sm:text-sm"
-            placeholder={t("fullNamePlaceholder")}
-          />
           <input
             id="email-address"
             name="email"
@@ -98,23 +78,12 @@ const Register = () => {
             id="password"
             name="password"
             type="password"
-            autoComplete="new-password"
+            autoComplete="current-password"
             required
             value={password}
             onChange={(e) => setPassword(e.target.value)}
             className="block w-full px-4 py-3 border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-sky-500 focus:border-sky-500 sm:text-sm"
             placeholder={t("passwordPlaceholder")}
-          />
-          <input
-            id="confirm-password"
-            name="confirm-password"
-            type="password"
-            autoComplete="new-password"
-            required
-            value={confirmPassword}
-            onChange={(e) => setConfirmPassword(e.target.value)}
-            className="block w-full px-4 py-3 border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-sky-500 focus:border-sky-500 sm:text-sm"
-            placeholder={t("confirmPasswordPlaceholder")}
           />
         </div>
 
@@ -124,32 +93,28 @@ const Register = () => {
             disabled={isLoading}
             className="w-full flex justify-center py-3 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-sky-600 hover:bg-sky-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-sky-500 disabled:opacity-50 disabled:cursor-not-allowed"
           >
-            {isLoading ? t("creatingAccount") : t("createAccount")}
+            {isLoading ? t("signingIn") : t("signIn")}
           </button>
         </div>
 
-        <div className="text-sm text-center">
-          <p className="text-gray-600">
-            {t("termsAgreement")}{" "}
-            <Link
-              to="/terms"
-              className="font-medium text-sky-600 hover:text-sky-500"
-            >
-              {t("termsOfService")}
-            </Link>{" "}
-            {t("and")}{" "}
-            <Link
-              to="/privacy"
-              className="font-medium text-sky-600 hover:text-sky-500"
-            >
-              {t("privacyPolicy")}
-            </Link>
-            .
-          </p>
+        <div className="relative">
+          <div className="absolute inset-0 flex items-center">
+            <div className="w-full border-t border-gray-300" />
+          </div>
+          <div className="relative flex justify-center text-sm">
+            <span className="px-2 bg-white text-gray-500">{t("or")}</span>
+          </div>
         </div>
+
+        <EDSLoginButton
+          buttonText={t("signInWithEDS")}
+          onSuccess={handleEDSLoginSuccess}
+          onNewUser={handleNewUser}
+          className="w-full"
+        />
       </form>
     </div>
   );
 };
 
-export default Register;
+export default Login;

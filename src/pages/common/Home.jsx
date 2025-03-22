@@ -1,5 +1,5 @@
 import { Link } from "react-router-dom";
-import { useAuth } from "../context/AuthContext";
+import { useAuth } from "../../context/AuthContext";
 import { useTranslation } from "react-i18next";
 
 const Home = () => {
